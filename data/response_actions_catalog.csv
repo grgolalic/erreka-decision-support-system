@@ -1,0 +1,11 @@
+response_action_id,response_action,description,response_time_category,resource_intensity
+RA01,Immediate shutdown,Immediately stop door operation to prevent safety risks,Immediate,Medium
+RA02,Remote system reset,Perform a remote reset to restore normal operation,Short,Low
+RA03,Remote inspection,Analyze door data remotely to assess the situation,Short,Low
+RA04,On-site technician dispatch,Send a technician to the site for inspection or repair,Medium,High
+RA05,Preventive maintenance scheduling,Schedule maintenance based on detected risk patterns,Long,Medium
+RA06,Temporary access restriction,Limit door usage until the issue is resolved,Immediate,Low
+RA07,Customer notification,Inform customer about the issue and expected resolution,Short,Low
+RA08,Component replacement,Replace a faulty mechanical or electronic component,Medium,High
+RA09,Software or parameter update,Update configuration or software to correct abnormal behavior,Medium,Medium
+RA10,Monitoring only,Continue monitoring without immediate action,Long,Low

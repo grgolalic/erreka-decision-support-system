@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Erreka Maintenance Strategy Simulator</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="header-logo">⬡</span>
+        <span>Erreka Maintenance Strategy Simulator</span>
+      </div>
+      <div class="header-right">
+        <div class="header-meta">76 High risk doors &nbsp;·&nbsp; 504 total doors &nbsp;·&nbsp; 998 incidents</div>
+        <div class="erreka-badge">ERREKA</div>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <button class="nav-btn active" onclick="showScreen('home')">Home</button>
+    <button class="nav-btn" onclick="showScreen('simulate')">Simulate</button>
+    <button class="nav-btn" onclick="showScreen('compare')">Compare</button>
+    <button class="nav-btn" onclick="showScreen('results')">Results</button>
+  </nav>
+
+  <!-- SCREEN 1: HOME -->
+  <section id="screen-home" class="screen active">
+    <div class="card center">
+      <div class="erreka-badge large">ERREKA</div>
+      <h1>Erreka Maintenance Strategy Simulator</h1>
+      <p class="subtitle">Compare maintenance strategies over time. Understand trade-offs between failures, SLA breaches, and cost before committing to a strategy.</p>
+      <div class="stat-row">
+        <div class="stat-box"><span class="stat-number">504</span><span class="stat-label">Total Doors</span></div>
+        <div class="stat-box"><span class="stat-number red">76</span><span class="stat-label">High Risk Doors</span></div>
+        <div class="stat-box"><span class="stat-number">998</span><span class="stat-label">Total Incidents</span></div>
+      </div>
+      <button class="btn-primary" onclick="showScreen('simulate')">Configure New Simulation →</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: SCENARIO CONFIGURATION -->
+  <section id="screen-simulate" class="screen">
+    <div class="card">
+      <h2>Scenario Configuration <span class="erreka-badge small">ERREKA</span></h2>
+
+      <div class="config-group">
+        <label class="config-label">Strategy selector</label>
+        <div class="toggle-group">
+          <label class="toggle-item"><input type="checkbox" id="chk-reactive" checked /> Reactive only</label>
+          <label class="toggle-item"><input type="checkbox" id="chk-preventive" checked /> Preventive (usage based)</label>
+          <label class="toggle-item"><input type="checkbox" id="chk-risksla" checked /> Risk &amp; SLA based</label>
+        </div>
+      </div>
+
+      <div class="config-group">
+        <label class="config-label">Time horizon</label>
+        <div class="toggle-group">
+          <label class="toggle-item"><input type="radio" name="months" value="3" /> 3 months</label>
+          <label class="toggle-item"><input type="radio" name="months" value="6" checked /> 6 months</label>
+          <label class="toggle-item"><input type="radio" name="months" value="12" /> 1 year</label>
+        </div>
+      </div>
+
+      <div class="config-group">
+        <label class="config-label">Filters</label>
+        <div class="toggle-group">
+          <label class="toggle-item"><input type="checkbox" checked /> Door type (ROLLfast / ECOline)</label>
+          <label class="toggle-item"><input type="checkbox" checked /> Country</label>
+          <label class="toggle-item"><input type="checkbox" checked /> Criticality level</label>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="showScreen('strategy-rules')">View Strategy Rules &amp; Run →</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 3 : STRATEGY RULES TABLE -->
+  <section id="screen-strategy-rules" class="screen">
+    <div class="card">
+      <h2>Strategy Rules Table <span class="erreka-badge small">ERREKA</span></h2>
+      <table class="rules-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Reactive</th>
+            <th>Preventive</th>
+            <th>Risk &amp; SLA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Trigger</td><td>After fail</td><td>Usage ≥ 1000/mo</td><td>Risk score ≥ 2</td></tr>
+          <tr><td>Inspection frequency</td><td>None</td><td>Monthly</td><td>Based on score</td></tr>
+          <tr><td>Repair speed</td><td>Slow</td><td>Medium</td><td>Fast (critical)</td></tr>
+          <tr><td>Cost per action</td><td>High</td><td>Medium</td><td>Medium-high</td></tr>
+        </tbody>
+      </table>
+      <p class="assumption-note">* Rules are applied at each monthly time step to determine transition probabilities. These are modelling assumptions, not empirically validated values.</p>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="showScreen('simulate')">← Back</button>
+        <button class="btn-primary" onclick="runSimulation()">Run Simulation →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: LOADING -->
+  <section id="screen-loading" class="screen">
+    <div class="card center">
+      <h2 id="loading-title">Running Simulation...</h2>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <p id="loading-subtitle" class="subtitle">Simulating 6-month horizon for 3 strategies...</p>
+    </div>
+  </section>
+
+  <!-- SCREEN 5: SIMULATION ENGINE FLOW -->
+  <section id="screen-engine-flow" class="screen">
+    <div class="card">
+      <h2>What Happens at Each Time Step? <span class="erreka-badge small">ERREKA</span></h2>
+      <div class="flow-container">
+        <div class="flow-box blue">
+          <strong>MONTH N BEGINS</strong>
+          <span>(e.g. Month 3 of 6)</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-box blue">
+          <strong>FOR EACH DOOR</strong>
+          <span>Read current state<br/>(OK / Degrading / Failed)</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-box blue">
+          <strong>APPLY STRATEGY RULES</strong>
+          <span>Calculate transition probability<br/>for this door</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-box blue">
+          <strong>UPDATE DOOR STATE</strong>
+          <span>OK → Degrading?<br/>Degrading → Failed?<br/>Failed → Repaired?</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-box blue">
+          <strong>COLLECT METRICS</strong>
+          <span>+ failures count<br/>+ SLA breach? (yes/no)<br/>+ maintenance cost</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-box blue">
+          <strong>STORE RESULTS</strong>
+          <span>→ Month N complete<br/>→ Proceed to Month N+1</span>
+        </div>
+      </div>
+      <p class="assumption-note">* This loop runs for each of the 504 doors, for each month, for each strategy — 3 parallel simulations.</p>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="showScreen('loading')">← Back</button>
+        <button class="btn-primary" onclick="showScreen('state-transition')">View State Transitions →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 6 : STATE TRANSITION DIAGRAM -->
+  <section id="screen-state-transition" class="screen">
+    <div class="card">
+      <h2>State Transition Diagram <span class="erreka-badge small">ERREKA</span></h2>
+      <div class="state-diagram">
+        <div class="state-row">
+          <div class="state-node ok">OK</div>
+          <div class="state-arrow-label">
+            <span class="arrow-label">p_degrade</span>
+            <span class="arrow-line">——————→</span>
+          </div>
+          <div class="state-node degrading">DEGRADING</div>
+        </div>
+        <div class="state-row vertical">
+          <div class="state-arrow-col">
+            <span class="arrow-label">p_repair</span>
+            <span class="arrow-vert">↑</span>
+          </div>
+          <div class="spacer"></div>
+          <div class="state-arrow-col">
+            <span class="arrow-label">p_fail</span>
+            <span class="arrow-vert">↓</span>
+          </div>
+        </div>
+        <div class="state-row">
+          <div class="spacer"></div>
+          <div class="spacer"></div>
+          <div class="state-node failed">FAILED</div>
+        </div>
+      </div>
+
+      <table class="rules-table" style="margin-top: 28px;">
+        <thead>
+          <tr>
+            <th>Transition</th>
+            <th>Reactive</th>
+            <th>Preventive</th>
+            <th>Risk &amp; SLA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-highlight-yellow"><td>OK → Degrading</td><td>0.15</td><td>0.08</td><td>0.05</td></tr>
+          <tr class="row-highlight-red"><td>Degrading → Failed</td><td>0.40</td><td>0.20</td><td>0.10</td></tr>
+          <tr class="row-highlight-green"><td>Failed → Repaired</td><td>0.60</td><td>0.80</td><td>0.95</td></tr>
+        </tbody>
+      </table>
+      <p class="assumption-note">* Lower probability = strategy is more effective at preventing that transition. Risk &amp; SLA strategy has the lowest failure probability but highest targeted intervention cost.</p>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="showScreen('engine-flow')">← Back</button>
+        <button class="btn-primary" onclick="showScreen('single')">View Results →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 7: SINGLE STRATEGY VIEW -->
+  <section id="screen-single" class="screen">
+    <div class="card">
+      <div class="screen-header-row">
+        <h2>Results: Single Strategy View</h2>
+        <select id="strategy-select" onchange="renderSingleStrategy()">
+          <option value="Reactive">Reactive</option>
+          <option value="Preventive">Preventive</option>
+          <option value="Risk_SLA">Risk &amp; SLA</option>
+        </select>
+      </div>
+      <div class="charts-row">
+        <div class="chart-box"><canvas id="chart-failures-single"></canvas></div>
+        <div class="chart-box"><canvas id="chart-sla-single"></canvas></div>
+      </div>
+      <div class="chart-box-wide"><canvas id="chart-cost-single"></canvas></div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="showScreen('simulate')">← Back to Configuration</button>
+        <button class="btn-primary" onclick="showScreen('compare')">Compare All Strategies →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 8: COMPARISON VIEW -->
+  <section id="screen-compare" class="screen">
+    <div class="card">
+      <h2>Comparison View</h2>
+      <table class="comparison-table" id="comparison-table"></table>
+      <div class="chart-box-wide" style="margin-top:24px;"><canvas id="chart-compare-failures"></canvas></div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="showScreen('simulate')">← Back to Configuration</button>
+        <button class="btn-primary" id="btn-export" onclick="exportReport()">Export Report</button>
+        <button class="btn-primary" onclick="showScreen('results')">Decision Summary →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 9: DECISION SUMMARY -->
+  <section id="screen-results" class="screen">
+    <div class="card">
+      <div class="screen-header-row">
+        <h2>Decision Summary / Recommendation</h2>
+        <div class="erreka-badge">ERREKA</div>
+      </div>
+      <p id="summary-text" class="summary-text"></p>
+
+      <div class="screen-header-row" style="margin-top: 12px; margin-bottom: 12px;">
+        <h3 style="margin: 0;">Top 5 doors requiring immediate intervention</h3>
+        <select id="priority-strategy-select" onchange="renderPriorityDoors()">
+          <option value="Reactive">Reactive</option>
+          <option value="Preventive">Preventive</option>
+          <option value="Risk_SLA" selected>Risk &amp; SLA</option>
+        </select>
+      </div>
+
+      <table class="priority-table">
+        <thead><tr><th>#</th><th>Door ID</th><th>Risk</th><th>SLA</th><th>Details</th></tr></thead>
+        <tbody id="priority-table-body"></tbody>
+      </table>
+      <p id="priority-note" class="assumption-note"></p>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="showScreen('simulate')">Start New Simulation →</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

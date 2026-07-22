@@ -1,0 +1,410 @@
+let simulationData = null;
+let chartFailuresSingle = null;
+let chartSlaSingle = null;
+let chartCostSingle = null;
+let chartCompare = null;
+
+// NAVIGATION
+
+const SCREENS_REQUIRING_DATA = [
+  'single',
+  'compare',
+  'results',
+  'engine-flow',
+  'state-transition',
+];
+
+function showScreen(name) {
+  if (SCREENS_REQUIRING_DATA.includes(name) && !simulationData) {
+    alert(
+      'Please run the simulation first.\n\n' +
+      'Go to "Simulate", configure your scenario, and click "Run Simulation".'
+    );
+    name = 'simulate';
+  }
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  const map = { home: 0, simulate: 1, compare: 2, results: 3 };
+  if (map[name] !== undefined) {
+    document.querySelectorAll('.nav-btn')[map[name]].classList.add('active');
+  }
+}
+
+// LOAD SIMULATION DATA
+
+
+async function loadData() {
+  try {
+    const response = await fetch('../output/simulation_results.json');
+    simulationData = await response.json();
+    return true;
+  } catch (e) {
+    console.error('Could not load simulation_results.json:', e);
+    return false;
+  }
+}
+// RUN SIMULATION
+
+async function runSimulation() {
+  const reactive = document.getElementById('chk-reactive').checked;
+  const preventive = document.getElementById('chk-preventive').checked;
+  const risksla = document.getElementById('chk-risksla').checked;
+
+  if (!reactive && !preventive && !risksla) {
+    alert('Please select at least one strategy before running the simulation.');
+    return;
+  }
+
+  const months = document.querySelector('input[name="months"]:checked').value;
+  showScreen('loading');
+  document.getElementById('loading-subtitle').textContent =
+    `Simulating ${months}-month horizon for 3 strategies...`;
+
+  const bar = document.getElementById('progress-bar');
+  bar.style.width = '0%';
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += 2;
+    bar.style.width = progress + '%';
+    if (progress >= 90) clearInterval(interval);
+  }, 30);
+
+  const loaded = await loadData();
+  clearInterval(interval);
+  bar.style.width = '100%';
+
+  setTimeout(() => {
+    if (loaded) {
+      renderSingleStrategy();
+      renderComparison();
+      renderSummary();
+      showScreen('engine-flow');
+    } else {
+      document.getElementById('loading-title').textContent =
+        'Error: could not load simulation_results.json';
+      document.getElementById('loading-subtitle').textContent =
+        'Make sure you ran erreka_simulation.py first and that output/simulation_results.json exists.';
+    }
+  }, 500);
+}
+// SINGLE STRATEGY VIEW
+
+function renderSingleStrategy() {
+  if (!simulationData) return;
+
+  const reactive = document.getElementById('chk-reactive').checked;
+  const preventive = document.getElementById('chk-preventive').checked;
+  const risksla = document.getElementById('chk-risksla').checked;
+
+  const select = document.getElementById('strategy-select');
+
+  // Remember what the user had selected BEFORE we rebuild the dropdown
+  const previouslySelected = select.value;
+
+  const availableOptions = [];
+  if (reactive) availableOptions.push({ value: 'Reactive', label: 'Reactive' });
+  if (preventive) availableOptions.push({ value: 'Preventive', label: 'Preventive' });
+  if (risksla) availableOptions.push({ value: 'Risk_SLA', label: 'Risk & SLA' });
+
+  const currentOptionValues = Array.from(select.options).map(o => o.value).join(',');
+  const newOptionValues = availableOptions.map(o => o.value).join(',');
+
+  if (currentOptionValues !== newOptionValues) {
+    select.innerHTML = availableOptions
+      .map(o => `<option value="${o.value}">${o.label}</option>`)
+      .join('');
+
+
+    if (availableOptions.some(o => o.value === previouslySelected)) {
+      select.value = previouslySelected;
+    }
+  }
+
+  const strategyName = select.value;
+  const strategy = simulationData.strategies.find(s => s.strategy === strategyName);
+  if (!strategy) return;
+
+  const selectedMonths = parseInt(document.querySelector('input[name="months"]:checked').value);
+  const labels = strategy.months.slice(0, selectedMonths).map(m => 'Month ' + m);
+  const failures = strategy.failures.slice(0, selectedMonths);
+  const sla = strategy.sla_breaches.slice(0, selectedMonths);
+  const costs = strategy.costs.slice(0, selectedMonths);
+
+  const colors = { Reactive: '#e63946', Preventive: '#2a9d8f', Risk_SLA: '#457b9d' };
+  const color = colors[strategyName];
+
+  if (chartFailuresSingle) chartFailuresSingle.destroy();
+  if (chartSlaSingle) chartSlaSingle.destroy();
+  if (chartCostSingle) chartCostSingle.destroy();
+
+  chartFailuresSingle = new Chart(
+    document.getElementById('chart-failures-single'),
+    makeLineChart(labels, failures, 'Failures over time', color)
+  );
+  chartSlaSingle = new Chart(
+    document.getElementById('chart-sla-single'),
+    makeLineChart(labels, sla, 'SLA Breaches over time', color)
+  );
+  chartCostSingle = new Chart(
+    document.getElementById('chart-cost-single'),
+    makeBarChart(labels, costs, 'Maintenance Cost (€) per month', color)
+  );
+}
+
+// COMPARISON VIEW
+
+function renderComparison() {
+  if (!simulationData) return;
+
+  const strategies = simulationData.strategies;
+  const colors = ['#e63946', '#2a9d8f', '#457b9d'];
+  const names = ['Reactive', 'Preventive', 'Risk & SLA'];
+  const selectedMonths = parseInt(document.querySelector('input[name="months"]:checked').value);
+
+  const metrics = [
+    { label: 'Total Failures',       key: 'total_failures' },
+    { label: 'SLA Breaches',         key: 'total_sla_breaches' },
+    { label: 'Total Cost (€)',        key: 'total_cost' },
+    { label: 'Avg Monthly Failures', key: 'avg_monthly_failures' },
+  ];
+
+  let tableHTML = `<thead><tr>
+    <th>Metric</th><th>Reactive</th><th>Preventive</th><th>Risk &amp; SLA</th>
+  </tr></thead><tbody>`;
+
+  metrics.forEach(metric => {
+    const values = strategies.map(s => {
+      if (metric.key === 'total_failures') return s.failures.slice(0, selectedMonths).reduce((a, b) => a + b, 0);
+      if (metric.key === 'total_sla_breaches') return s.sla_breaches.slice(0, selectedMonths).reduce((a, b) => a + b, 0);
+      if (metric.key === 'total_cost') return s.costs.slice(0, selectedMonths).reduce((a, b) => a + b, 0);
+      if (metric.key === 'avg_monthly_failures') return Math.round(s.failures.slice(0, selectedMonths).reduce((a, b) => a + b, 0) / selectedMonths * 10) / 10;
+      return s.totals[metric.key];
+    });
+    const best = Math.min(...values);
+    tableHTML += `<tr><td>${metric.label}</td>`;
+    values.forEach(v => {
+      const isBest = v === best;
+      const display = metric.key === 'total_cost'
+        ? '€' + Number(v).toLocaleString()
+        : v;
+      tableHTML += `<td>${isBest ? `<span class="winner">${display} ✓</span>` : display}</td>`;
+    });
+    tableHTML += '</tr>';
+  });
+  tableHTML += '</tbody>';
+  document.getElementById('comparison-table').innerHTML = tableHTML;
+
+  const labels = strategies[0].months.slice(0, selectedMonths).map(m => 'Month ' + m);
+  if (chartCompare) chartCompare.destroy();
+  chartCompare = new Chart(
+    document.getElementById('chart-compare-failures'),
+    {
+      type: 'line',
+      data: {
+        labels,
+        datasets: strategies.map((s, i) => ({
+          label: names[i],
+          data: s.failures.slice(0, selectedMonths),
+          borderColor: colors[i],
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          tension: 0.3,
+        }))
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Failures over time — all strategies' }
+        },
+        scales: { y: { beginAtZero: true } }
+      }
+    }
+  );
+}
+
+// DECISION SUMMARY
+
+function renderSummary() {
+  if (!simulationData) return;
+
+  const strategies = simulationData.strategies;
+  const reactive = strategies.find(s => s.strategy === 'Reactive');
+  const riskSla  = strategies.find(s => s.strategy === 'Risk_SLA');
+  const preventive = strategies.find(s => s.strategy === 'Preventive');
+
+  const failureReduction = Math.round(
+    (1 - riskSla.totals.total_failures / reactive.totals.total_failures) * 100
+  );
+  const slaReduction = Math.round(
+    (1 - riskSla.totals.total_sla_breaches / reactive.totals.total_sla_breaches) * 100
+  );
+  const costSaving = reactive.totals.total_cost - riskSla.totals.total_cost;
+
+  document.getElementById('summary-text').textContent =
+    `Based on your simulation, the Risk & SLA-based strategy reduces total failures by ${failureReduction}% ` +
+    `and SLA breaches by ${slaReduction}% compared to the Reactive strategy, ` +
+    `with a cost saving of €${Number(costSaving).toLocaleString()} over the simulated period. ` +
+    `The Preventive strategy reduces failures compared to Reactive but results in the highest total cost ` +
+    `(€${Number(preventive.totals.total_cost).toLocaleString()}) due to regular inspection overhead across all 504 doors. ` +
+    `The Risk & SLA strategy delivers the best outcome across all three key metrics.`;
+
+  // Also render the top-priority doors table for the currently selected strategy
+  renderPriorityDoors();
+}
+
+// TOP PRIORITY DOORS TABLE (dynamic, per strategy)
+
+function renderPriorityDoors() {
+  if (!simulationData) return;
+
+  // Read which strategy the user is viewing on the summary screen
+  const strategyName = document.getElementById('priority-strategy-select').value;
+  const strategy = simulationData.strategies.find(s => s.strategy === strategyName);
+  if (!strategy || !strategy.top_priority_doors) return;
+
+  const doors = strategy.top_priority_doors;
+  const tbody = document.getElementById('priority-table-body');
+
+  // SLA badge style depends on category
+  const slaBadge = (cat) => {
+    if (cat === 'Critical')      return '<span class="badge-critical">Critical SLA</span>';
+    if (cat === 'High Priority') return '<span class="badge-critical" style="background:#ffe5b4;color:#a05a00;">High Priority</span>';
+    if (cat === 'Standard')      return '<span class="badge-critical" style="background:#e7f0ff;color:#1a4480;">Standard</span>';
+    return '<span class="badge-critical" style="background:#eee;color:#555;">' + cat + '</span>';
+  };
+
+  const riskBadge = (level) => {
+    if (level === 'High')   return '<span class="badge-high">High risk</span>';
+    if (level === 'Medium') return '<span class="badge-high" style="background:#fff3cd;color:#856404;">Medium risk</span>';
+    return '<span class="badge-high" style="background:#e8f5e9;color:#1a6b2e;">Low risk</span>';
+  };
+
+  // Short, readable door type
+  const shortType = (t) => {
+    if (!t) return '';
+    if (t.includes('ROLLfast'))            return 'ROLLfast';
+    if (t.includes('ECOline Pedestrian'))  return 'ECOline Ped.';
+    if (t.includes('ECOline'))             return 'ECOline';
+    return t;
+  };
+
+  let html = '';
+  doors.forEach((d, i) => {
+    const details = `${shortType(d.door_type)} · ${d.country} · ${d.failures} failures`;
+    html += `<tr>
+      <td>${i + 1}</td>
+      <td>${d.door_id}</td>
+      <td>${riskBadge(d.risk_level)}</td>
+      <td>${slaBadge(d.sla_category)}</td>
+      <td>${details}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+
+  // Updating the explanatory note based on the strategy logic
+  const noteEl = document.getElementById('priority-note');
+  const notes = {
+    'Reactive':   'Reactive strategy: only doors currently in failure (days since last = 0) are listed. Ranked by raw failure count.',
+    'Preventive': 'Preventive strategy: only doors that are NOT currently failing are listed. Ranked by usage intensity and historical failures — these consume the inspection cycle fastest.',
+    'Risk_SLA':   'Risk & SLA strategy: all doors considered. Ranked by business impact: risk score combined with SLA criticality.',
+  };
+  if (noteEl) noteEl.textContent = notes[strategyName] || '';
+}
+
+// EXPORT REPORT
+
+function exportReport() {
+  if (!simulationData) return;
+
+  const strategies = simulationData.strategies;
+  const lines = [];
+  lines.push('ERREKA DSS - Activity 7: Simulation Report');
+  lines.push('==========================================');
+  lines.push(`Simulation horizon: ${simulationData.simulation_config.months} months`);
+  lines.push(`Total doors: ${simulationData.simulation_config.total_doors}`);
+  lines.push('');
+  lines.push('SUMMARY');
+  lines.push('---------');
+  lines.push('Strategy,Total Failures,SLA Breaches,Total Cost (€)');
+  strategies.forEach(s => {
+    lines.push(`${s.strategy},${s.totals.total_failures},${s.totals.total_sla_breaches},${s.totals.total_cost}`);
+  });
+  lines.push('');
+  lines.push('MONTHLY BREAKDOWN');
+  lines.push('---------');
+  strategies.forEach(s => {
+    lines.push(`\n[${s.strategy}]`);
+    lines.push('Month,Failures,SLA Breaches,Cost (€)');
+    s.months.forEach((m, i) => {
+      lines.push(`${m},${s.failures[i]},${s.sla_breaches[i]},${s.costs[i]}`);
+    });
+  });
+  lines.push('');
+  lines.push('NOTE: Transition probabilities are modelling assumptions, not empirically validated values.');
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'erreka_simulation_report.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// CHART HELPERS
+
+function makeLineChart(labels, data, title, color) {
+  return {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: title,
+        data,
+        borderColor: color,
+        backgroundColor: color + '22',
+        borderWidth: 2,
+        pointRadius: 4,
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: title }
+      },
+      scales: { y: { beginAtZero: true } }
+    }
+  };
+}
+
+function makeBarChart(labels, data, title, color) {
+  return {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: title,
+        data,
+        backgroundColor: color + '99',
+        borderColor: color,
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: title }
+      },
+      scales: { y: { beginAtZero: true } }
+    }
+  };
+}
+showScreen('home');

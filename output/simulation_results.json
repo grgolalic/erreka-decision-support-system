@@ -1,0 +1,600 @@
+{
+  "simulation_config": {
+    "months": 12,
+    "total_doors": 504,
+    "random_seed": 42,
+    "assumption_note": "Transition probabilities are modelling assumptions, not empirically validated values. They reflect the conceptual effectiveness of each maintenance strategy."
+  },
+  "strategies": [
+    {
+      "strategy": "Reactive",
+      "months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "failures": [
+        31,
+        48,
+        40,
+        54,
+        51,
+        51,
+        49,
+        46,
+        44,
+        42,
+        46,
+        66
+      ],
+      "sla_breaches": [
+        31,
+        51,
+        39,
+        46,
+        40,
+        46,
+        38,
+        34,
+        27,
+        29,
+        35,
+        49
+      ],
+      "costs": [
+        87350,
+        122800.0,
+        88000.0,
+        111900.0,
+        96350.0,
+        107350.0,
+        96650.0,
+        84100.0,
+        74400.0,
+        79700.0,
+        93100.0,
+        126100.0
+      ],
+      "state_counts": [
+        {
+          "OK": 333,
+          "Degrading": 140,
+          "Failed": 31,
+          "Repaired": 0
+        },
+        {
+          "OK": 309,
+          "Degrading": 133,
+          "Failed": 62,
+          "Repaired": 0
+        },
+        {
+          "OK": 289,
+          "Degrading": 151,
+          "Failed": 64,
+          "Repaired": 0
+        },
+        {
+          "OK": 282,
+          "Degrading": 136,
+          "Failed": 86,
+          "Repaired": 0
+        },
+        {
+          "OK": 281,
+          "Degrading": 129,
+          "Failed": 94,
+          "Repaired": 0
+        },
+        {
+          "OK": 291,
+          "Degrading": 126,
+          "Failed": 87,
+          "Repaired": 0
+        },
+        {
+          "OK": 302,
+          "Degrading": 120,
+          "Failed": 82,
+          "Repaired": 0
+        },
+        {
+          "OK": 318,
+          "Degrading": 112,
+          "Failed": 74,
+          "Repaired": 0
+        },
+        {
+          "OK": 324,
+          "Degrading": 114,
+          "Failed": 66,
+          "Repaired": 0
+        },
+        {
+          "OK": 306,
+          "Degrading": 129,
+          "Failed": 69,
+          "Repaired": 0
+        },
+        {
+          "OK": 281,
+          "Degrading": 144,
+          "Failed": 79,
+          "Repaired": 0
+        },
+        {
+          "OK": 288,
+          "Degrading": 120,
+          "Failed": 96,
+          "Repaired": 0
+        }
+      ],
+      "totals": {
+        "total_failures": 568,
+        "total_sla_breaches": 465,
+        "total_cost": 1167800.0,
+        "avg_monthly_failures": 47.3
+      },
+      "top_priority_doors": [
+        {
+          "door_id": "I-DE-000094",
+          "door_type": "ROLLfast Industrial 300",
+          "country": "Germany",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 10,
+          "days_since_last": 0,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "I-US-000390",
+          "door_type": "ROLLfast Industrial 300",
+          "country": "United States",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 10,
+          "days_since_last": 0,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "I-UK-000160",
+          "door_type": "ROLLfast Industrial 300",
+          "country": "United Kingdom",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 9,
+          "days_since_last": 0,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "P-UK-000147",
+          "door_type": "ECOline Pedestrian",
+          "country": "United Kingdom",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 8,
+          "days_since_last": 0,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "P-IN-000227",
+          "door_type": "ECOline Pedestrian",
+          "country": "India",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 8,
+          "days_since_last": 0,
+          "usage_scenario": "intensive"
+        }
+      ]
+    },
+    {
+      "strategy": "Preventive",
+      "months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "failures": [
+        20,
+        28,
+        30,
+        21,
+        25,
+        31,
+        26,
+        24,
+        21,
+        26,
+        22,
+        20
+      ],
+      "sla_breaches": [
+        20,
+        29,
+        27,
+        16,
+        20,
+        25,
+        20,
+        18,
+        13,
+        17,
+        15,
+        17
+      ],
+      "costs": [
+        110480,
+        125120.0,
+        117880.0,
+        97620.0,
+        104260.0,
+        113780.0,
+        102520.0,
+        98760.0,
+        93740,
+        101880.0,
+        91240.0,
+        95760.0
+      ],
+      "state_counts": [
+        {
+          "OK": 365,
+          "Degrading": 119,
+          "Failed": 20,
+          "Repaired": 0
+        },
+        {
+          "OK": 359,
+          "Degrading": 114,
+          "Failed": 31,
+          "Repaired": 0
+        },
+        {
+          "OK": 354,
+          "Degrading": 115,
+          "Failed": 35,
+          "Repaired": 0
+        },
+        {
+          "OK": 361,
+          "Degrading": 119,
+          "Failed": 24,
+          "Repaired": 0
+        },
+        {
+          "OK": 353,
+          "Degrading": 120,
+          "Failed": 31,
+          "Repaired": 0
+        },
+        {
+          "OK": 345,
+          "Degrading": 118,
+          "Failed": 41,
+          "Repaired": 0
+        },
+        {
+          "OK": 352,
+          "Degrading": 118,
+          "Failed": 34,
+          "Repaired": 0
+        },
+        {
+          "OK": 340,
+          "Degrading": 134,
+          "Failed": 30,
+          "Repaired": 0
+        },
+        {
+          "OK": 349,
+          "Degrading": 132,
+          "Failed": 23,
+          "Repaired": 0
+        },
+        {
+          "OK": 334,
+          "Degrading": 139,
+          "Failed": 31,
+          "Repaired": 0
+        },
+        {
+          "OK": 346,
+          "Degrading": 134,
+          "Failed": 24,
+          "Repaired": 0
+        },
+        {
+          "OK": 341,
+          "Degrading": 137,
+          "Failed": 26,
+          "Repaired": 0
+        }
+      ],
+      "totals": {
+        "total_failures": 294,
+        "total_sla_breaches": 237,
+        "total_cost": 1253040.0,
+        "avg_monthly_failures": 24.5
+      },
+      "top_priority_doors": [
+        {
+          "door_id": "I-IT-000130",
+          "door_type": "ROLLfast Industrial 300",
+          "country": "Italy",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 5,
+          "days_since_last": 1,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "I-BR-000478",
+          "door_type": "ROLLfast Industrial 300",
+          "country": "Brazil",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 4,
+          "days_since_last": 1,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "P-MX-000436",
+          "door_type": "ECOline Pedestrian",
+          "country": "Mexico",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 4,
+          "days_since_last": 1,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "I-MX-000445",
+          "door_type": "ROLLfast Industrial 300",
+          "country": "Mexico",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 4,
+          "days_since_last": 1,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "P-CN-000273",
+          "door_type": "ECOline Pedestrian",
+          "country": "China",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 4,
+          "days_since_last": 1,
+          "usage_scenario": "intensive"
+        }
+      ]
+    },
+    {
+      "strategy": "Risk_SLA",
+      "months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "failures": [
+        8,
+        12,
+        5,
+        12,
+        11,
+        15,
+        13,
+        11,
+        9,
+        23,
+        14,
+        11
+      ],
+      "sla_breaches": [
+        7,
+        8,
+        5,
+        10,
+        9,
+        8,
+        9,
+        4,
+        7,
+        13,
+        6,
+        6
+      ],
+      "costs": [
+        66050,
+        70450,
+        60250,
+        72450,
+        68850,
+        67250,
+        72050,
+        61850,
+        62650,
+        85050,
+        64650,
+        61850
+      ],
+      "state_counts": [
+        {
+          "OK": 380,
+          "Degrading": 116,
+          "Failed": 8,
+          "Repaired": 0
+        },
+        {
+          "OK": 362,
+          "Degrading": 129,
+          "Failed": 13,
+          "Repaired": 0
+        },
+        {
+          "OK": 359,
+          "Degrading": 140,
+          "Failed": 5,
+          "Repaired": 0
+        },
+        {
+          "OK": 347,
+          "Degrading": 145,
+          "Failed": 12,
+          "Repaired": 0
+        },
+        {
+          "OK": 343,
+          "Degrading": 150,
+          "Failed": 11,
+          "Repaired": 0
+        },
+        {
+          "OK": 346,
+          "Degrading": 143,
+          "Failed": 15,
+          "Repaired": 0
+        },
+        {
+          "OK": 349,
+          "Degrading": 140,
+          "Failed": 15,
+          "Repaired": 0
+        },
+        {
+          "OK": 341,
+          "Degrading": 152,
+          "Failed": 11,
+          "Repaired": 0
+        },
+        {
+          "OK": 327,
+          "Degrading": 168,
+          "Failed": 9,
+          "Repaired": 0
+        },
+        {
+          "OK": 323,
+          "Degrading": 157,
+          "Failed": 24,
+          "Repaired": 0
+        },
+        {
+          "OK": 335,
+          "Degrading": 154,
+          "Failed": 15,
+          "Repaired": 0
+        },
+        {
+          "OK": 334,
+          "Degrading": 159,
+          "Failed": 11,
+          "Repaired": 0
+        }
+      ],
+      "totals": {
+        "total_failures": 144,
+        "total_sla_breaches": 92,
+        "total_cost": 813400,
+        "avg_monthly_failures": 12.0
+      },
+      "top_priority_doors": [
+        {
+          "door_id": "I-DE-000094",
+          "door_type": "ROLLfast Industrial 300",
+          "country": "Germany",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 10,
+          "days_since_last": 0,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "I-US-000390",
+          "door_type": "ROLLfast Industrial 300",
+          "country": "United States",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 10,
+          "days_since_last": 0,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "I-UK-000160",
+          "door_type": "ROLLfast Industrial 300",
+          "country": "United Kingdom",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 9,
+          "days_since_last": 0,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "P-UK-000147",
+          "door_type": "ECOline Pedestrian",
+          "country": "United Kingdom",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 8,
+          "days_since_last": 0,
+          "usage_scenario": "intensive"
+        },
+        {
+          "door_id": "P-IN-000227",
+          "door_type": "ECOline Pedestrian",
+          "country": "India",
+          "risk_level": "High",
+          "sla_category": "Critical",
+          "failures": 8,
+          "days_since_last": 0,
+          "usage_scenario": "intensive"
+        }
+      ]
+    }
+  ],
+  "transition_probabilities": {
+    "Reactive": {
+      "ok_to_degrading": 0.15,
+      "degrading_to_failed": 0.4,
+      "failed_to_repaired": 0.6
+    },
+    "Preventive": {
+      "ok_to_degrading": 0.08,
+      "degrading_to_failed": 0.2,
+      "failed_to_repaired": 0.8
+    },
+    "Risk_SLA": {
+      "ok_to_degrading": 0.05,
+      "degrading_to_failed": 0.1,
+      "failed_to_repaired": 0.95
+    }
+  }
+}
